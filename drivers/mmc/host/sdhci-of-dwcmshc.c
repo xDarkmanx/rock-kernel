@@ -611,13 +611,6 @@ static void dwcmshc_rk3568_set_clock(struct sdhci_host *host, unsigned int clock
 	sdhci_writew(host, 0, SDHCI_CLOCK_CONTROL);
 
 	if (clock <= 52000000) {
-		if (host->mmc->ios.timing == MMC_TIMING_MMC_HS200 ||
-		    host->mmc->ios.timing == MMC_TIMING_MMC_HS400) {
-			dev_err(mmc_dev(host->mmc),
-				"Can't reduce the clock below 52MHz in HS200/HS400 mode");
-			goto enable_clk;
-		}
-
 		/*
 		 * Disable DLL and reset both of sample and drive clock.
 		 * The bypass bit and start bit need to be set if DLL is not locked.
