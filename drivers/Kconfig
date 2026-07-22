@@ -175,6 +175,8 @@ source "drivers/mailbox/Kconfig"
 
 source "drivers/iommu/Kconfig"
 
+source "drivers/rknpu/Kconfig"
+
 source "drivers/remoteproc/Kconfig"
 
 source "drivers/rpmsg/Kconfig"
