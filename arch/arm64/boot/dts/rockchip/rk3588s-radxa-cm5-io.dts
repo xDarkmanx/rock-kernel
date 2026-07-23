@@ -191,13 +191,9 @@
 			     <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH 0>,
 			     <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "npu0_mmu", "npu1_mmu", "npu2_mmu";
-		clocks = <&cru ACLK_NPU0>, <&cru ACLK_NPU1>,
-			 <&cru ACLK_NPU2>, <&cru HCLK_NPU0>,
-			 <&cru HCLK_NPU1>, <&cru HCLK_NPU2>;
-		clock-names = "aclk", "aclk1", "aclk2",
-			      "iface", "iface1", "iface2";
+		clocks = <&cru ACLK_NPU0>, <&cru HCLK_NPU0>;
+		clock-names = "aclk", "iface";
 		#iommu-cells = <0>;
-		power-domains = <&power RK3588_PD_NPUTOP>;
 		status = "okay";
 	};
 };
@@ -947,9 +943,5 @@
 };
 
 &rknpu {
-	status = "okay";
-};
-
-&rknpu_mmu {
 	status = "okay";
 };
