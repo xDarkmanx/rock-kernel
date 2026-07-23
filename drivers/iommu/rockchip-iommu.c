@@ -117,6 +117,7 @@ struct rk_iommu {
 	bool cmd_retry;
 	bool master_handle_irq;
 	bool shootdown_entire;
+	bool dlr_disable; /* avoid resume via device link; master resumes us */
 	struct reset_control *resets;
 	struct iommu_device iommu;
 	struct list_head node; /* entry in rk_iommu_domain.iommus */
@@ -1127,9 +1128,23 @@ static int rk_iommu_attach_device(struct iommu_domain *domain,
 	list_add_tail(&iommu->node, &rk_domain->iommus);
 	spin_unlock_irqrestore(&rk_domain->iommus_lock, flags);
 
-	ret = pm_runtime_get_if_in_use(iommu->dev);
-	if (!ret || WARN_ON_ONCE(ret < 0))
-		return 0;
+	/*
+	 * Without DL_FLAG_PM_RUNTIME (rockchip,disable-device-link-resume) the
+	 * supplier link does not auto-resume this device before the master
+	 * probe, so do it explicitly here: by the time the master attaches a
+	 * domain it must have already powered on the parent IP block.
+	 */
+	if (iommu->dlr_disable) {
+		ret = pm_runtime_resume_and_get(iommu->dev);
+		if (ret < 0) {
+			dev_err(iommu->dev, "attach: pm_runtime_resume_and_get failed: %d\n", ret);
+			return ret;
+		}
+	} else {
+		ret = pm_runtime_get_if_in_use(iommu->dev);
+		if (!ret || WARN_ON_ONCE(ret < 0))
+			return 0;
+	}
 
 	ret = rk_iommu_enable(iommu);
 	if (ret)
@@ -1217,6 +1232,7 @@ static struct iommu_device *rk_iommu_probe_device(struct device *dev)
 {
 	struct rk_iommudata *data;
 	struct rk_iommu *iommu;
+	u32 flags = DL_FLAG_STATELESS;
 
 	data = dev_iommu_priv_get(dev);
 	if (!data)
@@ -1224,8 +1240,20 @@ static struct iommu_device *rk_iommu_probe_device(struct device *dev)
 
 	iommu = rk_iommu_from_dev(dev);
 
-	data->link = device_link_add(dev, iommu->dev,
-				     DL_FLAG_STATELESS | DL_FLAG_PM_RUNTIME);
+	/*
+	 * When the master driver (e.g. BSP-derived rknpu) is responsible for
+	 * powering on the parent IP block (NPU clocks + power domains) before
+	 * touching the IOMMU, the device link must NOT carry DL_FLAG_PM_RUNTIME:
+	 * otherwise the framework runtime-resumes this IOMMU via the supplier
+	 * link from driver_probe_device() before the master probe has had a
+	 * chance to enable anything, and the very first MMU register read
+	 * raises a synchronous external abort. The master will runtime-resume
+	 * this device explicitly through rk_iommu_attach_device().
+	 */
+	if (!iommu->dlr_disable)
+		flags |= DL_FLAG_PM_RUNTIME;
+
+	data->link = device_link_add(dev, iommu->dev, flags);
 
 	return &iommu->iommu;
 }
@@ -1334,6 +1362,8 @@ static int rk_iommu_probe(struct platform_device *pdev)
 					"rockchip,master-handle-irq");
 	iommu->shootdown_entire = device_property_read_bool(dev,
 					"rockchip,shootdown-entire");
+	iommu->dlr_disable = device_property_read_bool(dev,
+					"rockchip,disable-device-link-resume");
 
 	/*
 	 * iommu clocks should be present for all new devices and devicetrees

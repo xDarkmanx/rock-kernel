@@ -204,6 +204,7 @@
 		resets = <&cru SRST_A_RKNN0>, <&cru SRST_A_RKNN1>,
 			 <&cru SRST_A_RKNN2>, <&cru SRST_H_RKNN0>,
 			 <&cru SRST_H_RKNN1>, <&cru SRST_H_RKNN2>;
+		rockchip,disable-device-link-resume;
 		#iommu-cells = <0>;
 		power-domains = <&power RK3588_PD_NPUTOP>;
 		status = "okay";
