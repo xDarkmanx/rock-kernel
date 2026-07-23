@@ -1363,6 +1363,12 @@ static int rk_iommu_probe(struct platform_device *pdev)
 	if (err)
 		goto err_unprepare_clocks;
 
+	dev_info(dev, "probe: num_mmu=%d num_irq=%d num_clocks=%d skip_read=%d cmd_retry=%d master_handle_irq=%d shootdown_entire=%d reset_disabled=%d resets=%d\n",
+		 iommu->num_mmu, iommu->num_irq, iommu->num_clocks,
+		 iommu->skip_read, iommu->cmd_retry, iommu->master_handle_irq,
+		 iommu->shootdown_entire, iommu->reset_disabled,
+		 iommu->resets != NULL);
+
 	pm_runtime_enable(dev);
 
 	for (i = 0; i < iommu->num_irq; i++) {
@@ -1433,16 +1439,25 @@ static int __maybe_unused rk_iommu_resume(struct device *dev)
 	struct rk_iommu *iommu = dev_get_drvdata(dev);
 	int ret;
 
+	dev_info(dev, "resume: domain=%p identity=%d num_clocks=%d num_mmu=%d\n",
+		 iommu->domain, iommu->domain == &rk_identity_domain,
+		 iommu->num_clocks, iommu->num_mmu);
+
 	if (iommu->domain == &rk_identity_domain)
 		return 0;
 
 	if (iommu->resets) {
 		ret = reset_control_deassert(iommu->resets);
-		if (ret)
+		if (ret) {
+			dev_err(dev, "resume: reset_control_deassert failed: %d\n", ret);
 			return ret;
+		}
 	}
 
-	return rk_iommu_enable(iommu);
+	ret = rk_iommu_enable(iommu);
+	if (ret)
+		dev_err(dev, "resume: rk_iommu_enable failed: %d\n", ret);
+	return ret;
 }
 
 static const struct dev_pm_ops rk_iommu_pm_ops = {

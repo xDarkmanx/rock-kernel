@@ -186,10 +186,21 @@
 			     <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH 0>,
 			     <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "npu0_mmu", "npu1_mmu", "npu2_mmu";
-		clocks = <&cru ACLK_NPU0>, <&cru ACLK_NPU1>, <&cru ACLK_NPU2>,
-			 <&cru HCLK_NPU0>, <&cru HCLK_NPU1>, <&cru HCLK_NPU2>;
-		clock-names = "aclk0", "aclk1", "aclk2",
-			      "iface0", "iface1", "iface2";
+		/*
+		 * In BSP the rknpu master driver enables all 8 NPU clocks first
+		 * (clk_bulk_prepare_enable in rknpu_power_on), so the IOMMU node
+		 * only needs the 6 per-core clocks. In mainline the rknpu_mmu
+		 * supplier is runtime-resumed via device link BEFORE the rknpu
+		 * consumer probe runs, so the IOMMU driver itself must enable
+		 * SCMI_CLK_NPU + PCLK_NPU_ROOT, otherwise MMU_STATUS reads
+		 * take a synchronous external abort.
+		 */
+		clocks = <&scmi_clk SCMI_CLK_NPU>, <&cru ACLK_NPU0>,
+			 <&cru ACLK_NPU1>, <&cru ACLK_NPU2>,
+			 <&cru HCLK_NPU0>, <&cru HCLK_NPU1>,
+			 <&cru HCLK_NPU2>, <&cru PCLK_NPU_ROOT>;
+		clock-names = "clk_npu", "aclk0", "aclk1", "aclk2",
+			      "hclk0", "hclk1", "hclk2", "pclk";
 		resets = <&cru SRST_A_RKNN0>, <&cru SRST_A_RKNN1>,
 			 <&cru SRST_A_RKNN2>, <&cru SRST_H_RKNN0>,
 			 <&cru SRST_H_RKNN1>, <&cru SRST_H_RKNN2>;
