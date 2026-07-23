@@ -41,6 +41,8 @@
 #include "rknpu_devfreq.h"
 #include "rknpu_iommu.h"
 
+#include <soc/rockchip/rockchip_iommu.h>
+
 #ifdef CONFIG_ROCKCHIP_RKNPU_DRM_GEM
 #include <drm/drm_device.h>
 #include <drm/drm_ioctl.h>
@@ -988,6 +990,18 @@ static int rknpu_power_on(struct rknpu_device *rknpu_dev)
 	if (rknpu_dev->config->state_init != NULL)
 		rknpu_dev->config->state_init(rknpu_dev);
 
+	/*
+	 * The rknpu_mmu IOMMU is registered with "rockchip,disable-device-link-
+	 * resume", so the framework did not runtime-resume it during probe and
+	 * rk_iommu_attach_device() skipped the MMU enable. Power and clocks for
+	 * the NPU block are now on, so bring the IOMMU up explicitly here.
+	 */
+	if (rknpu_dev->iommu_en) {
+		ret = rockchip_iommu_enable(dev);
+		if (ret)
+			LOG_DEV_ERROR(dev, "failed to enable iommu: %d\n", ret);
+	}
+
 out:
 #ifndef FPGA_PLATFORM
 	rknpu_devfreq_unlock(rknpu_dev);
@@ -1008,6 +1022,10 @@ static int rknpu_power_off(struct rknpu_device *rknpu_dev)
 #endif
 
 	pm_runtime_put_sync(dev);
+
+	/* Disable IOMMU before tearing down NPU power/clocks. */
+	if (rknpu_dev->iommu_en)
+		rockchip_iommu_disable(dev);
 
 	if (rknpu_dev->multiple_domains) {
 #ifndef FPGA_PLATFORM

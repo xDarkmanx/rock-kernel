@@ -707,6 +707,35 @@ int rockchip_pagefault_done(struct device *master_dev)
 }
 EXPORT_SYMBOL_GPL(rockchip_pagefault_done);
 
+/*
+ * BSP-style explicit IOMMU enable/disable API for master drivers that
+ * handle parent IP power/clock setup themselves and use
+ * "rockchip,disable-device-link-resume" so the framework does not auto-resume
+ * the IOMMU during probe. The master driver calls these once it has powered
+ * on the NPU block (clocks + power domains).
+ */
+int rockchip_iommu_enable(struct device *master_dev)
+{
+	struct rk_iommu *iommu = rk_iommu_from_dev(master_dev);
+
+	if (!iommu)
+		return -ENODEV;
+
+	return pm_runtime_resume_and_get(iommu->dev);
+}
+EXPORT_SYMBOL_GPL(rockchip_iommu_enable);
+
+int rockchip_iommu_disable(struct device *master_dev)
+{
+	struct rk_iommu *iommu = rk_iommu_from_dev(master_dev);
+
+	if (!iommu)
+		return -ENODEV;
+
+	return pm_runtime_put(iommu->dev);
+}
+EXPORT_SYMBOL_GPL(rockchip_iommu_disable);
+
 static irqreturn_t rk_iommu_irq(int irq, void *dev_id)
 {
 	struct rk_iommu *iommu = dev_id;
@@ -1129,22 +1158,23 @@ static int rk_iommu_attach_device(struct iommu_domain *domain,
 	spin_unlock_irqrestore(&rk_domain->iommus_lock, flags);
 
 	/*
-	 * Without DL_FLAG_PM_RUNTIME (rockchip,disable-device-link-resume) the
-	 * supplier link does not auto-resume this device before the master
-	 * probe, so do it explicitly here: by the time the master attaches a
-	 * domain it must have already powered on the parent IP block.
+	 * When rockchip,disable-device-link-resume is set, the master driver
+	 * is responsible for powering on the parent IP block and for explicitly
+	 * enabling this IOMMU (via rockchip_iommu_enable()) from its own probe.
+	 * mainline calls rk_iommu_attach_device() automatically during
+	 * iommu_setup_default_domain() which happens inside rk_iommu_probe(),
+	 * long before the master probe has had a chance to power anything on -
+	 * touching the MMU registers here would abort. So just register in the
+	 * domain and let the master bring the MMU up.
 	 */
 	if (iommu->dlr_disable) {
-		ret = pm_runtime_resume_and_get(iommu->dev);
-		if (ret < 0) {
-			dev_err(iommu->dev, "attach: pm_runtime_resume_and_get failed: %d\n", ret);
-			return ret;
-		}
-	} else {
-		ret = pm_runtime_get_if_in_use(iommu->dev);
-		if (!ret || WARN_ON_ONCE(ret < 0))
-			return 0;
+		dev_info(iommu->dev, "attach: dlr_disable, deferring MMU enable to master\n");
+		return 0;
 	}
+
+	ret = pm_runtime_get_if_in_use(iommu->dev);
+	if (!ret || WARN_ON_ONCE(ret < 0))
+		return 0;
 
 	ret = rk_iommu_enable(iommu);
 	if (ret)
