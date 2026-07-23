@@ -1372,11 +1372,18 @@ static int rknpu_probe(struct platform_device *pdev)
 			return -ENXIO;
 		}
 
-		rknpu_dev->base[i] = devm_ioremap_resource(dev, res);
-		if (PTR_ERR(rknpu_dev->base[i]) == -EBUSY) {
-			rknpu_dev->base[i] = devm_ioremap(dev, res->start,
-							  resource_size(res));
-		}
+		/*
+		 * The rknpu core register aperture (fdab0000-0xffff etc.)
+		 * overlaps with the rknpu_mmu sub-device MMU register banks
+		 * (fdab9000/0xa000/0xca000/0xda000) on rk3588: in the DT both
+		 * nodes carry overlapping reg entries on purpose. Using
+		 * devm_ioremap_resource() (which calls request_mem_region)
+		 * would fail with -EBUSY because the IOMMU driver already
+		 * reserved those banks, so map non-exclusively here. No other
+		 * driver writes to the NPU core registers.
+		 */
+		rknpu_dev->base[i] = devm_ioremap(dev, res->start,
+						  resource_size(res));
 
 		if (IS_ERR(rknpu_dev->base[i])) {
 			LOG_DEV_ERROR(dev,
