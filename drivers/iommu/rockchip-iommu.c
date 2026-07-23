@@ -47,6 +47,7 @@
 #define RK_MMU_POLL_PERIOD_US		100
 #define RK_MMU_FORCE_RESET_TIMEOUT_US	100000
 #define RK_MMU_POLL_TIMEOUT_US		1000
+#define CMD_RETRY_COUNT			3
 
 /* RK_MMU_STATUS fields */
 #define RK_MMU_STATUS_PAGING_ENABLED       BIT(0)
@@ -89,14 +90,10 @@ struct rk_iommu_domain {
 	dma_addr_t dt_dma;
 	spinlock_t iommus_lock; /* lock for iommus list */
 	spinlock_t dt_lock; /* lock for modifying page directory table */
+	bool shootdown_entire;
 	struct device *dma_dev;
 
 	struct iommu_domain domain;
-};
-
-/* list of clocks required by IOMMU */
-static const char * const rk_iommu_clocks[] = {
-	"aclk", "iface",
 };
 
 struct rk_iommu_ops {
@@ -115,6 +112,10 @@ struct rk_iommu {
 	struct clk_bulk_data *clocks;
 	int num_clocks;
 	bool reset_disabled;
+	bool skip_read; /* rk3126/rk3128 can't read vop iommu registers */
+	bool cmd_retry;
+	bool master_handle_irq;
+	bool shootdown_entire;
 	struct reset_control *resets;
 	struct iommu_device iommu;
 	struct list_head node; /* entry in rk_iommu_domain.iommus */
@@ -128,6 +129,7 @@ struct rk_iommudata {
 
 static const struct rk_iommu_ops *rk_ops;
 static struct iommu_domain rk_identity_domain;
+static struct rk_iommu *rk_iommu_from_dev(struct device *dev);
 
 static inline void rk_table_flush(struct rk_iommu_domain *dom, dma_addr_t dma,
 				  unsigned int count)
@@ -414,6 +416,10 @@ static int rk_iommu_enable_stall(struct rk_iommu *iommu)
 {
 	int ret, i;
 	bool val;
+	int retry_count = 0;
+
+	if (iommu->skip_read)
+		goto read_wa;
 
 	if (rk_iommu_is_stall_active(iommu))
 		return 0;
@@ -422,15 +428,22 @@ static int rk_iommu_enable_stall(struct rk_iommu *iommu)
 	if (!rk_iommu_is_paging_enabled(iommu))
 		return 0;
 
+read_wa:
 	rk_iommu_command(iommu, RK_MMU_CMD_ENABLE_STALL);
+	if (iommu->skip_read)
+		return 0;
 
 	ret = readx_poll_timeout(rk_iommu_is_stall_active, iommu, val,
 				 val, RK_MMU_POLL_PERIOD_US,
 				 RK_MMU_POLL_TIMEOUT_US);
-	if (ret)
+	if (ret) {
 		for (i = 0; i < iommu->num_mmu; i++)
-			dev_err(iommu->dev, "Enable stall request timed out, status: %#08x\n",
+			dev_err(iommu->dev, "Enable stall request timed out, retry_count = %d, status: %#08x\n",
+				retry_count,
 				rk_iommu_read(iommu->bases[i], RK_MMU_STATUS));
+		if (iommu->cmd_retry && (retry_count++ < CMD_RETRY_COUNT))
+			goto read_wa;
+	}
 
 	return ret;
 }
@@ -439,19 +452,30 @@ static int rk_iommu_disable_stall(struct rk_iommu *iommu)
 {
 	int ret, i;
 	bool val;
+	int retry_count = 0;
+
+	if (iommu->skip_read)
+		goto read_wa;
 
 	if (!rk_iommu_is_stall_active(iommu))
 		return 0;
 
+read_wa:
 	rk_iommu_command(iommu, RK_MMU_CMD_DISABLE_STALL);
+	if (iommu->skip_read)
+		return 0;
 
 	ret = readx_poll_timeout(rk_iommu_is_stall_active, iommu, val,
 				 !val, RK_MMU_POLL_PERIOD_US,
 				 RK_MMU_POLL_TIMEOUT_US);
-	if (ret)
+	if (ret) {
 		for (i = 0; i < iommu->num_mmu; i++)
-			dev_err(iommu->dev, "Disable stall request timed out, status: %#08x\n",
+			dev_err(iommu->dev, "Disable stall request timed out, retry_count = %d, status: %#08x\n",
+				retry_count,
 				rk_iommu_read(iommu->bases[i], RK_MMU_STATUS));
+		if (iommu->cmd_retry && (retry_count++ < CMD_RETRY_COUNT))
+			goto read_wa;
+	}
 
 	return ret;
 }
@@ -460,19 +484,30 @@ static int rk_iommu_enable_paging(struct rk_iommu *iommu)
 {
 	int ret, i;
 	bool val;
+	int retry_count = 0;
+
+	if (iommu->skip_read)
+		goto read_wa;
 
 	if (rk_iommu_is_paging_enabled(iommu))
 		return 0;
 
+read_wa:
 	rk_iommu_command(iommu, RK_MMU_CMD_ENABLE_PAGING);
+	if (iommu->skip_read)
+		return 0;
 
 	ret = readx_poll_timeout(rk_iommu_is_paging_enabled, iommu, val,
 				 val, RK_MMU_POLL_PERIOD_US,
 				 RK_MMU_POLL_TIMEOUT_US);
-	if (ret)
+	if (ret) {
 		for (i = 0; i < iommu->num_mmu; i++)
-			dev_err(iommu->dev, "Enable paging request timed out, status: %#08x\n",
+			dev_err(iommu->dev, "Enable paging request timed out, retry_count = %d, status: %#08x\n",
+				retry_count,
 				rk_iommu_read(iommu->bases[i], RK_MMU_STATUS));
+		if (iommu->cmd_retry && (retry_count++ < CMD_RETRY_COUNT))
+			goto read_wa;
+	}
 
 	return ret;
 }
@@ -481,19 +516,30 @@ static int rk_iommu_disable_paging(struct rk_iommu *iommu)
 {
 	int ret, i;
 	bool val;
+	int retry_count = 0;
+
+	if (iommu->skip_read)
+		goto read_wa;
 
 	if (!rk_iommu_is_paging_enabled(iommu))
 		return 0;
 
+read_wa:
 	rk_iommu_command(iommu, RK_MMU_CMD_DISABLE_PAGING);
+	if (iommu->skip_read)
+		return 0;
 
 	ret = readx_poll_timeout(rk_iommu_is_paging_enabled, iommu, val,
 				 !val, RK_MMU_POLL_PERIOD_US,
 				 RK_MMU_POLL_TIMEOUT_US);
-	if (ret)
+	if (ret) {
 		for (i = 0; i < iommu->num_mmu; i++)
-			dev_err(iommu->dev, "Disable paging request timed out, status: %#08x\n",
+			dev_err(iommu->dev, "Disable paging request timed out, retry_count = %d, status: %#08x\n",
+				retry_count,
 				rk_iommu_read(iommu->bases[i], RK_MMU_STATUS));
+		if (iommu->cmd_retry && (retry_count++ < CMD_RETRY_COUNT))
+			goto read_wa;
+	}
 
 	return ret;
 }
@@ -581,21 +627,13 @@ print_it:
 		rk_pte_is_page_valid(pte), &page_addr_phys, page_flags);
 }
 
-static irqreturn_t rk_iommu_irq(int irq, void *dev_id)
+static irqreturn_t rk_pagefault_done(struct rk_iommu *iommu)
 {
-	struct rk_iommu *iommu = dev_id;
 	u32 status;
 	u32 int_status;
 	dma_addr_t iova;
 	irqreturn_t ret = IRQ_NONE;
-	int i, err;
-
-	err = pm_runtime_get_if_in_use(iommu->dev);
-	if (!err || WARN_ON_ONCE(err < 0))
-		return ret;
-
-	if (WARN_ON(clk_bulk_enable(iommu->num_clocks, iommu->clocks)))
-		goto out;
+	int i;
 
 	for (i = 0; i < iommu->num_mmu; i++) {
 		int_status = rk_iommu_read(iommu->bases[i], RK_MMU_INT_STATUS);
@@ -607,6 +645,7 @@ static irqreturn_t rk_iommu_irq(int irq, void *dev_id)
 
 		if (int_status & RK_MMU_IRQ_PAGE_FAULT) {
 			int flags;
+			u32 int_mask;
 
 			status = rk_iommu_read(iommu->bases[i], RK_MMU_STATUS);
 			flags = (status & RK_MMU_STATUS_PAGE_FAULT_IS_WRITE) ?
@@ -623,14 +662,26 @@ static irqreturn_t rk_iommu_irq(int irq, void *dev_id)
 			 * Ignore the return code, though, since we always zap cache
 			 * and clear the page fault anyway.
 			 */
-			if (iommu->domain != &rk_identity_domain)
-				report_iommu_fault(iommu->domain, iommu->dev, iova,
-						   flags);
-			else
-				dev_err(iommu->dev, "Page fault while iommu not attached to domain?\n");
+			if (!iommu->master_handle_irq) {
+				if (iommu->domain != &rk_identity_domain)
+					report_iommu_fault(iommu->domain,
+							   iommu->dev, iova,
+							   flags);
+				else
+					dev_err(iommu->dev, "Page fault while iommu not attached to domain?\n");
+			}
 
 			rk_iommu_base_command(iommu->bases[i], RK_MMU_CMD_ZAP_CACHE);
-			rk_iommu_base_command(iommu->bases[i], RK_MMU_CMD_PAGE_FAULT_DONE);
+
+			/*
+			 * Master may clear the int_mask to prevent iommu
+			 * re-enter interrupt when mapping. So we postpone
+			 * sending PAGE_FAULT_DONE command to mapping finished.
+			 */
+			int_mask = rk_iommu_read(iommu->bases[i], RK_MMU_INT_MASK);
+			if (int_mask != 0x0)
+				rk_iommu_base_command(iommu->bases[i],
+						      RK_MMU_CMD_PAGE_FAULT_DONE);
 		}
 
 		if (int_status & RK_MMU_IRQ_BUS_ERROR)
@@ -641,6 +692,38 @@ static irqreturn_t rk_iommu_irq(int irq, void *dev_id)
 				int_status);
 
 		rk_iommu_write(iommu->bases[i], RK_MMU_INT_CLEAR, int_status);
+	}
+
+	return ret;
+}
+
+int rockchip_pagefault_done(struct device *master_dev)
+{
+	struct rk_iommu *iommu = rk_iommu_from_dev(master_dev);
+
+	return rk_pagefault_done(iommu);
+}
+EXPORT_SYMBOL_GPL(rockchip_pagefault_done);
+
+static irqreturn_t rk_iommu_irq(int irq, void *dev_id)
+{
+	struct rk_iommu *iommu = dev_id;
+	irqreturn_t ret = IRQ_NONE;
+	int err;
+
+	err = pm_runtime_get_if_in_use(iommu->dev);
+	if (!err || WARN_ON_ONCE(err < 0))
+		return ret;
+
+	if (WARN_ON(clk_bulk_enable(iommu->num_clocks, iommu->clocks)))
+		goto out;
+
+	/* Master must call rockchip_pagefault_done to handle pagefault */
+	if (iommu->master_handle_irq) {
+		if (iommu->domain != &rk_identity_domain)
+			ret = report_iommu_fault(iommu->domain, iommu->dev, -1, 0x0);
+	} else {
+		ret = rk_pagefault_done(iommu);
 	}
 
 	clk_bulk_disable(iommu->num_clocks, iommu->clocks);
@@ -683,6 +766,10 @@ static void rk_iommu_zap_iova(struct rk_iommu_domain *rk_domain,
 {
 	struct list_head *pos;
 	unsigned long flags;
+
+	/* Do not zap tlb cache line if shootdown_entire set */
+	if (rk_domain->shootdown_entire)
+		return;
 
 	/* shootdown these iova from all iommus using this domain */
 	spin_lock_irqsave(&rk_domain->iommus_lock, flags);
@@ -1033,6 +1120,7 @@ static int rk_iommu_attach_device(struct iommu_domain *domain,
 		return ret;
 
 	iommu->domain = domain;
+	rk_domain->shootdown_entire = iommu->shootdown_entire;
 
 	spin_lock_irqsave(&rk_domain->iommus_lock, flags);
 	list_add_tail(&iommu->node, &rk_domain->iommus);
@@ -1237,26 +1325,28 @@ static int rk_iommu_probe(struct platform_device *pdev)
 
 	iommu->reset_disabled = device_property_read_bool(dev,
 					"rockchip,disable-mmu-reset");
-
-	iommu->num_clocks = ARRAY_SIZE(rk_iommu_clocks);
-	iommu->clocks = devm_kcalloc(iommu->dev, iommu->num_clocks,
-				     sizeof(*iommu->clocks), GFP_KERNEL);
-	if (!iommu->clocks)
-		return -ENOMEM;
-
-	for (i = 0; i < iommu->num_clocks; ++i)
-		iommu->clocks[i].id = rk_iommu_clocks[i];
+	iommu->skip_read = device_property_read_bool(dev,
+					"rockchip,skip-mmu-read");
+	iommu->cmd_retry = device_property_read_bool(dev,
+					"rockchip,enable-cmd-retry");
+	iommu->master_handle_irq = device_property_read_bool(dev,
+					"rockchip,master-handle-irq");
+	iommu->shootdown_entire = device_property_read_bool(dev,
+					"rockchip,shootdown-entire");
 
 	/*
 	 * iommu clocks should be present for all new devices and devicetrees
 	 * but there are older devicetrees without clocks out in the wild.
-	 * So clocks as optional for the time being.
+	 * Use devm_clk_bulk_get_all() so that arbitrary clock counts are
+	 * supported (e.g. rk3588 NPU MMU exposes 6 clocks, one per core).
 	 */
-	err = devm_clk_bulk_get(iommu->dev, iommu->num_clocks, iommu->clocks);
+	err = devm_clk_bulk_get_all(dev, &iommu->clocks);
 	if (err == -ENOENT)
 		iommu->num_clocks = 0;
-	else if (err)
+	else if (err < 0)
 		return err;
+	else
+		iommu->num_clocks = err;
 
 	err = clk_bulk_prepare(iommu->num_clocks, iommu->clocks);
 	if (err)
@@ -1379,6 +1469,9 @@ static struct rk_iommu_ops iommu_data_ops_v2 = {
 static const struct of_device_id rk_iommu_dt_ids[] = {
 	{	.compatible = "rockchip,iommu",
 		.data = &iommu_data_ops_v1,
+	},
+	{	.compatible = "rockchip,iommu-v2",
+		.data = &iommu_data_ops_v2,
 	},
 	{	.compatible = "rockchip,rk3568-iommu",
 		.data = &iommu_data_ops_v2,
