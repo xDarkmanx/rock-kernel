@@ -177,7 +177,7 @@
 	};
 
 	rknpu_mmu: rknpu-iommu@fdab9000 {
-		compatible = "rockchip,rk3588-iommu", "rockchip,rk3568-iommu";
+		compatible = "rockchip,iommu-v2";
 		reg = <0x0 0xfdab9000 0x0 0x100>,
 		      <0x0 0xfdaba000 0x0 0x100>,
 		      <0x0 0xfdaca000 0x0 0x100>,
@@ -186,8 +186,10 @@
 			     <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH 0>,
 			     <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "npu0_mmu", "npu1_mmu", "npu2_mmu";
-		clocks = <&cru ACLK_NPU0>, <&cru HCLK_NPU0>;
-		clock-names = "aclk", "iface";
+		clocks = <&cru ACLK_NPU0>, <&cru ACLK_NPU1>, <&cru ACLK_NPU2>,
+			 <&cru HCLK_NPU0>, <&cru HCLK_NPU1>, <&cru HCLK_NPU2>;
+		clock-names = "aclk0", "aclk1", "aclk2",
+			      "iface0", "iface1", "iface2";
 		resets = <&cru SRST_A_RKNN0>, <&cru SRST_A_RKNN1>,
 			 <&cru SRST_A_RKNN2>, <&cru SRST_H_RKNN0>,
 			 <&cru SRST_H_RKNN1>, <&cru SRST_H_RKNN2>;
