@@ -23,6 +23,7 @@
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
+#include <linux/reset.h>
 #include <linux/slab.h>
 #include <linux/spinlock.h>
 #include <linux/string_choices.h>
@@ -114,6 +115,7 @@ struct rk_iommu {
 	struct clk_bulk_data *clocks;
 	int num_clocks;
 	bool reset_disabled;
+	struct reset_control *resets;
 	struct iommu_device iommu;
 	struct list_head node; /* entry in rk_iommu_domain.iommus */
 	struct iommu_domain *domain; /* domain to which iommu is attached */
@@ -1260,6 +1262,16 @@ static int rk_iommu_probe(struct platform_device *pdev)
 	if (err)
 		return err;
 
+	iommu->resets = devm_reset_control_array_get_optional_exclusive(dev);
+	if (IS_ERR(iommu->resets)) {
+		err = PTR_ERR(iommu->resets);
+		goto err_unprepare_clocks;
+	}
+
+	err = reset_control_deassert(iommu->resets);
+	if (err)
+		goto err_unprepare_clocks;
+
 	pm_runtime_enable(dev);
 
 	for (i = 0; i < iommu->num_irq; i++) {
@@ -1291,6 +1303,7 @@ err_remove_sysfs:
 	iommu_device_sysfs_remove(&iommu->iommu);
 err_pm_disable:
 	pm_runtime_disable(dev);
+err_unprepare_clocks:
 	clk_bulk_unprepare(iommu->num_clocks, iommu->clocks);
 	return err;
 }
@@ -1317,15 +1330,26 @@ static int __maybe_unused rk_iommu_suspend(struct device *dev)
 		return 0;
 
 	rk_iommu_disable(iommu);
+
+	if (iommu->resets)
+		reset_control_assert(iommu->resets);
+
 	return 0;
 }
 
 static int __maybe_unused rk_iommu_resume(struct device *dev)
 {
 	struct rk_iommu *iommu = dev_get_drvdata(dev);
+	int ret;
 
 	if (iommu->domain == &rk_identity_domain)
 		return 0;
+
+	if (iommu->resets) {
+		ret = reset_control_deassert(iommu->resets);
+		if (ret)
+			return ret;
+	}
 
 	return rk_iommu_enable(iommu);
 }
