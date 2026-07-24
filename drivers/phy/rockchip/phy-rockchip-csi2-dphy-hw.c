@@ -1168,7 +1168,6 @@ static int rockchip_csi2_dphy_hw_probe(struct platform_device *pdev)
 	struct csi2_dphy_hw *dphy_hw;
 	struct regmap *grf;
 	struct resource *res;
-	const struct of_device_id *of_id;
 	const struct dphy_hw_drv_data *drv_data;
 
 	dphy_hw = devm_kzalloc(dev, sizeof(*dphy_hw), GFP_KERNEL);
@@ -1176,11 +1175,9 @@ static int rockchip_csi2_dphy_hw_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	dphy_hw->dev = dev;
 
-	of_id = of_match_device(rockchip_csi2_dphy_hw_match_id, dev);
-	if (!of_id)
+	drv_data = of_device_get_match_data(dev);
+	if (!drv_data)
 		return -EINVAL;
-
-	drv_data = of_id->data;
 
 	grf = syscon_regmap_lookup_by_phandle(dev->of_node,
 					      "rockchip,grf");
