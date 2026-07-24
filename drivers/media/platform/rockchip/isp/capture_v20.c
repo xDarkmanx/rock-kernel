@@ -1256,8 +1256,8 @@ static void rdbk_frame_end(struct rkisp_stream *stream)
 			s_ts = cap->rdbk_buf[RDBK_S]->vb.vb2_buf.timestamp;
 
 			if ((m_ts - l_ts) > time || (s_ts - m_ts) > time) {
-				ret = v4l2_subdev_call(sensor->sd,
-					video, g_frame_interval, &sensor->fi);
+				ret = v4l2_subdev_call_state_active(sensor->sd,
+					pad, get_frame_interval, &sensor->fi);
 				if (!ret) {
 					denominator = sensor->fi.interval.denominator;
 					numerator = sensor->fi.interval.numerator;
@@ -1295,8 +1295,8 @@ static void rdbk_frame_end(struct rkisp_stream *stream)
 			s_ts = cap->rdbk_buf[RDBK_S]->vb.vb2_buf.timestamp;
 
 			if ((s_ts - l_ts) > time) {
-				ret = v4l2_subdev_call(sensor->sd,
-					video, g_frame_interval, &sensor->fi);
+				ret = v4l2_subdev_call_state_active(sensor->sd,
+					pad, get_frame_interval, &sensor->fi);
 				if (!ret) {
 					denominator = sensor->fi.interval.denominator;
 					numerator = sensor->fi.interval.numerator;

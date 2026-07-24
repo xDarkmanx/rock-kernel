@@ -635,7 +635,7 @@ static bool rkisp_rockit_ctrl_fps(struct rkisp_stream *stream)
 
 	sensor = dev->active_sensor;
 
-	ret = v4l2_subdev_call(sensor->sd, video, g_frame_interval, &sensor->fi);
+	ret = v4l2_subdev_call_state_active(sensor->sd, pad, get_frame_interval, &sensor->fi);
 	if (!ret) {
 		denominator = sensor->fi.interval.denominator;
 		numerator = sensor->fi.interval.numerator;

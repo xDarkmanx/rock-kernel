@@ -127,6 +127,7 @@ static void sditf_get_hdr_mode(struct sditf_priv *priv)
 }
 
 static int sditf_g_frame_interval(struct v4l2_subdev *sd,
+				  struct v4l2_subdev_state *state,
 				  struct v4l2_subdev_frame_interval *fi)
 {
 	struct sditf_priv *priv = to_sditf_priv(sd);
@@ -138,7 +139,7 @@ static int sditf_g_frame_interval(struct v4l2_subdev *sd,
 
 	if (cif_dev->terminal_sensor.sd) {
 		sensor_sd = cif_dev->terminal_sensor.sd;
-		return v4l2_subdev_call(sensor_sd, video, g_frame_interval, fi);
+		return v4l2_subdev_call_state_active(sensor_sd, pad, get_frame_interval, fi);
 	}
 
 	return -EINVAL;
@@ -1154,12 +1155,12 @@ static int sditf_s_rx_buffer(struct v4l2_subdev *sd,
 static const struct v4l2_subdev_pad_ops sditf_subdev_pad_ops = {
 	.set_fmt = sditf_get_set_fmt,
 	.get_fmt = sditf_get_set_fmt,
+	.get_frame_interval = sditf_g_frame_interval,
 	.get_selection = sditf_get_selection,
 	.get_mbus_config = sditf_g_mbus_config,
 };
 
 static const struct v4l2_subdev_video_ops sditf_video_ops = {
-	.g_frame_interval = sditf_g_frame_interval,
 	.s_stream = sditf_s_stream,
 	.s_rx_buffer = sditf_s_rx_buffer,
 };

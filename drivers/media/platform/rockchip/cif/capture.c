@@ -1847,9 +1847,9 @@ static void rkcif_rdbk_frame_end_toisp(struct rkcif_stream *stream,
 		}
 
 		if ((m_ts - l_ts) > time || (s_ts - m_ts) > time) {
-			ret = v4l2_subdev_call(sensor->sd,
-					       video,
-					       g_frame_interval,
+			ret = v4l2_subdev_call_state_active(sensor->sd,
+					       pad,
+					       get_frame_interval,
 					       &sensor->fi);
 			if (!ret) {
 				denominator = sensor->fi.interval.denominator;
@@ -1894,9 +1894,9 @@ static void rkcif_rdbk_frame_end_toisp(struct rkcif_stream *stream,
 		}
 
 		if ((s_ts - l_ts) > time) {
-			ret = v4l2_subdev_call(sensor->sd,
-					       video,
-					       g_frame_interval,
+			ret = v4l2_subdev_call_state_active(sensor->sd,
+					       pad,
+					       get_frame_interval,
 					       &sensor->fi);
 			if (!ret) {
 				denominator = sensor->fi.interval.denominator;
@@ -5566,7 +5566,7 @@ static int rkcif_create_dummy_buf(struct rkcif_stream *stream)
 				fie.index = j;
 				fie.pad = 0;
 				fie.which = V4L2_SUBDEV_FORMAT_ACTIVE;
-				ret = v4l2_subdev_call(tmp_dev->terminal_sensor.sd,
+				ret = v4l2_subdev_call_state_active(tmp_dev->terminal_sensor.sd,
 						       pad, enum_frame_interval,
 						       NULL, &fie);
 				if (!ret) {
@@ -6523,8 +6523,8 @@ int rkcif_update_sensor_info(struct rkcif_stream *stream)
 				 __func__, terminal_sensor->sd->name);
 			return ret;
 		}
-		ret = v4l2_subdev_call(terminal_sensor->sd, video,
-				       g_frame_interval, &terminal_sensor->fi);
+		ret = v4l2_subdev_call_state_active(terminal_sensor->sd, pad,
+				       get_frame_interval, &terminal_sensor->fi);
 		if (ret) {
 			v4l2_err(&stream->cifdev->v4l2_dev,
 				 "%s: get terminal %s g_frame_interval failed!\n",
@@ -7328,8 +7328,8 @@ int rkcif_do_start_stream(struct rkcif_stream *stream, enum rkcif_stream_mode mo
 		else
 			dev->hdr.hdr_mode = NO_HDR;
 
-		ret = v4l2_subdev_call(terminal_sensor->sd,
-				       video, g_frame_interval, &terminal_sensor->fi);
+		ret = v4l2_subdev_call_state_active(terminal_sensor->sd,
+				       pad, get_frame_interval, &terminal_sensor->fi);
 		if (ret)
 			terminal_sensor->fi.interval = (struct v4l2_fract) {1, 30};
 
@@ -8028,7 +8028,7 @@ static int rkcif_enum_frameintervals(struct file *file, void *fh,
 		return -ENODEV;
 	}
 
-	ret = v4l2_subdev_call(sensor->sd, video, g_frame_interval, &fi);
+	ret = v4l2_subdev_call_state_active(sensor->sd, pad, get_frame_interval, &fi);
 	if (ret && ret != -ENOIOCTLCMD) {
 		return ret;
 	} else if (ret == -ENOIOCTLCMD) {
@@ -9934,9 +9934,9 @@ static void rkcif_rdbk_frame_end(struct rkcif_stream *stream)
 			}
 
 			if ((m_ts - l_ts) > time || (s_ts - m_ts) > time) {
-				ret = v4l2_subdev_call(sensor->sd,
-						       video,
-						       g_frame_interval,
+				ret = v4l2_subdev_call_state_active(sensor->sd,
+						       pad,
+						       get_frame_interval,
 						       &sensor->fi);
 				if (!ret) {
 					denominator = sensor->fi.interval.denominator;
@@ -9995,9 +9995,9 @@ static void rkcif_rdbk_frame_end(struct rkcif_stream *stream)
 			}
 
 			if ((s_ts - l_ts) > time) {
-				ret = v4l2_subdev_call(sensor->sd,
-						       video,
-						       g_frame_interval,
+				ret = v4l2_subdev_call_state_active(sensor->sd,
+						       pad,
+						       get_frame_interval,
 						       &sensor->fi);
 				if (!ret) {
 					denominator = sensor->fi.interval.denominator;
