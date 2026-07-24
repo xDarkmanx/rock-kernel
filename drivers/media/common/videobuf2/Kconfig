@@ -28,7 +28,7 @@ config VIDEOBUF2_DMA_SG
 	select VIDEOBUF2_MEMOPS
 
 config VIDEOBUF2_CMA_SG
-	bool
+	tristate
 	select VIDEOBUF2_CORE
 	select VIDEOBUF2_MEMOPS
 	select DMA_SHARED_BUFFER
