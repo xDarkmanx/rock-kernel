@@ -32,6 +32,7 @@
  * SOFTWARE.
  */
 
+#include <media/rk-media-compat.h>
 #include <linux/clk.h>
 #include <linux/interrupt.h>
 #include <linux/io.h>
@@ -685,7 +686,7 @@ static int isp_subdev_notifier(struct rkisp_device *isp_dev)
 	struct device *dev = isp_dev->dev;
 	int ret;
 
-	v4l2_async_nf_init(ntf);
+	v4l2_async_nf_init(ntf, &isp_dev->v4l2_dev);
 
 	ret = v4l2_async_nf_parse_fwnode_endpoints(
 		dev, ntf, sizeof(struct rkisp_async_subdev),
@@ -695,7 +696,7 @@ static int isp_subdev_notifier(struct rkisp_device *isp_dev)
 
 	ntf->ops = &subdev_notifier_ops;
 
-	return v4l2_async_nf_register(&isp_dev->v4l2_dev, ntf);
+	return v4l2_async_nf_register(ntf);
 }
 
 /***************************** platform deive *******************************/

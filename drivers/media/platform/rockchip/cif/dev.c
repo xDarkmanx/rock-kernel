@@ -4,6 +4,7 @@
  *
  * Copyright (C) 2018 Rockchip Electronics Co., Ltd.
  */
+#include <media/rk-media-compat.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
@@ -2109,7 +2110,7 @@ static int cif_subdev_notifier(struct rkcif_device *cif_dev)
 	struct device *dev = cif_dev->dev;
 	int ret;
 
-	v4l2_async_nf_init(ntf);
+	v4l2_async_nf_init(ntf, &cif_dev->v4l2_dev);
 
 	ret = v4l2_async_nf_parse_fwnode_endpoints(
 		dev, ntf, sizeof(struct rkcif_async_subdev), rkcif_fwnode_parse);
@@ -2122,7 +2123,7 @@ static int cif_subdev_notifier(struct rkcif_device *cif_dev)
 
 	ntf->ops = &subdev_notifier_ops;
 
-	ret = v4l2_async_nf_register(&cif_dev->v4l2_dev, ntf);
+	ret = v4l2_async_nf_register(ntf);
 
 	return ret;
 }

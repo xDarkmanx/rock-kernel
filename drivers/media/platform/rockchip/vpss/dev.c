@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Copyright (C) 2023 Rockchip Electronics Co., Ltd */
 
+#include <media/rk-media-compat.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
@@ -243,13 +244,13 @@ static int rkvpss_subdev_notifier(struct rkvpss_device *dev)
 	struct v4l2_async_notifier *ntf = &dev->notifier;
 	int ret;
 
-	v4l2_async_nf_init(ntf);
+	v4l2_async_nf_init(ntf, &dev->v4l2_dev);
 	ret = v4l2_async_nf_parse_fwnode_endpoints(dev->dev,
 		ntf, sizeof(struct v4l2_async_subdev), NULL);
 	if (ret < 0)
 		return ret;
 	ntf->ops = &rkvpss_subdev_notifier_ops;
-	return v4l2_async_nf_register(&dev->v4l2_dev, ntf);
+	return v4l2_async_nf_register(ntf);
 }
 
 static int rkvpss_register_platform_subdevs(struct rkvpss_device *dev)

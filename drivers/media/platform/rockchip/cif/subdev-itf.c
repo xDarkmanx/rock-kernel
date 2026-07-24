@@ -4,6 +4,7 @@
  *
  * Copyright (C) 2020 Rockchip Electronics Co., Ltd.
  */
+#include <media/rk-media-compat.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
@@ -1365,7 +1366,7 @@ static int sditf_subdev_notifier(struct sditf_priv *sditf)
 	struct v4l2_async_notifier *ntf = &sditf->notifier;
 	int ret;
 
-	v4l2_async_nf_init(ntf);
+	v4l2_async_subdev_nf_init(ntf, &sditf->sd);
 
 	ret = v4l2_async_nf_parse_fwnode_endpoints(sditf->dev,
 							 ntf,
@@ -1377,7 +1378,7 @@ static int sditf_subdev_notifier(struct sditf_priv *sditf)
 	sditf->sd.subdev_notifier = &sditf->notifier;
 	sditf->notifier.ops = &sditf_notifier_ops;
 
-	ret = v4l2_async_subdev_nf_register(&sditf->sd, &sditf->notifier);
+	ret = v4l2_async_nf_register(&sditf->notifier);
 	if (ret) {
 		v4l2_err(&sditf->sd,
 			 "failed to register async notifier : %d\n",

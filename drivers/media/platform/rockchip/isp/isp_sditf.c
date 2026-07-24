@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Copyright (c) 2023 Rockchip Electronics Co., Ltd. */
 
+#include <media/rk-media-compat.h>
 #include <linux/delay.h>
 #include <linux/of_platform.h>
 #include <linux/pm_runtime.h>
@@ -158,8 +159,8 @@ static int rkisp_sditf_notifier(struct rkisp_sditf_device *sditf)
 	struct v4l2_async_notifier *ntf = &sditf->notifier;
 	int ret;
 
-	v4l2_async_nf_init(ntf);
-	ret = v4l2_async_subdev_nf_register(&sditf->sd, ntf);
+	v4l2_async_subdev_nf_init(ntf, &sditf->sd);
+	ret = v4l2_async_nf_register(ntf);
 	if (ret) {
 		v4l2_async_nf_cleanup(ntf);
 		dev_err(sditf->dev, "failed to register async notifier:%d\n", ret);
