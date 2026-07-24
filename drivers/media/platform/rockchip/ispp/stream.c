@@ -1015,7 +1015,7 @@ static void destroy_buf_queue(struct rkispp_stream *stream,
 	}
 	spin_unlock_irqrestore(&stream->vbq_lock, lock_flags);
 
-	for (i = 0; i < queue->num_buffers; ++i) {
+	for (i = 0; i < vb2_get_num_buffers(queue); ++i) {
 		if (queue->bufs[i]->state == VB2_BUF_STATE_ACTIVE)
 			vb2_buffer_done(queue->bufs[i], VB2_BUF_STATE_ERROR);
 	}
@@ -1181,10 +1181,10 @@ static int rkispp_init_vb2_queue(struct vb2_queue *q,
 	q->mem_ops = stream->isppdev->hw_dev->mem_ops;
 	q->buf_struct_size = sizeof(struct rkispp_buffer);
 	if (q->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
-		q->min_buffers_needed = STREAM_IN_REQ_BUFS_MIN;
+		q->min_queued_buffers = STREAM_IN_REQ_BUFS_MIN;
 		q->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_COPY;
 	} else {
-		q->min_buffers_needed = STREAM_OUT_REQ_BUFS_MIN;
+		q->min_queued_buffers = STREAM_OUT_REQ_BUFS_MIN;
 		q->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC;
 	}
 	q->lock = &stream->isppdev->apilock;
@@ -1825,7 +1825,7 @@ static enum hrtimer_restart rkispp_fec_do_early(struct hrtimer *timer)
 		vdev->is_done_early = false;
 		goto end;
 	} else if (working && !ycnt) {
-		hrtimer_forward(timer, timer->base->get_time(), ns_to_ktime(500000));
+		hrtimer_forward(timer, hrtimer_cb_get_time(timer), ns_to_ktime(500000));
 		ret = HRTIMER_RESTART;
 	} else {
 		v4l2_dbg(3, rkispp_debug, &dev->v4l2_dev,

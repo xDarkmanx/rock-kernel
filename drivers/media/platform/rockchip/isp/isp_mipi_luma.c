@@ -2,6 +2,7 @@
 /* Copyright (c) 2019 Fuzhou Rockchip Electronics Co., Ltd. */
 
 #include <linux/kfifo.h>
+#include <linux/vmalloc.h>
 #include <media/v4l2-common.h>
 #include <media/v4l2-ioctl.h>
 #include <media/videobuf2-core.h>

@@ -2,6 +2,7 @@
 /* Copyright (C) 2019 Rockchip Electronics Co., Ltd */
 
 #include <media/videobuf2-dma-contig.h>
+#include <linux/vmalloc.h>
 #include <linux/delay.h>
 #include <linux/iosys-map.h>
 #include <linux/of_platform.h>

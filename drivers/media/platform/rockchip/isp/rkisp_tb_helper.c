@@ -2,6 +2,7 @@
 /* Copyright (C) 2020 Rockchip Electronics Co., Ltd. */
 
 #include <linux/clk.h>
+#include <linux/vmalloc.h>
 #include <linux/clk-provider.h>
 #include <linux/slab.h>
 #include <linux/io.h>

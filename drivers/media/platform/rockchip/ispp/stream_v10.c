@@ -86,7 +86,7 @@ static enum hrtimer_restart rkispp_frame_done_early(struct hrtimer *timer)
 			ns = time * (threshold - ycnt) / ycnt + 100 * 1000;
 		if (ns > max_time)
 			ns = max_time;
-		hrtimer_forward(timer, timer->base->get_time(), ns_to_ktime(ns));
+		hrtimer_forward(timer, hrtimer_cb_get_time(timer), ns_to_ktime(ns));
 		ret = HRTIMER_RESTART;
 	} else {
 		v4l2_dbg(3, rkispp_debug, &stream->isppdev->v4l2_dev,

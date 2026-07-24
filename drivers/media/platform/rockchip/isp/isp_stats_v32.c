@@ -2,6 +2,7 @@
 /* Copyright (c) 2022 Rockchip Electronics Co., Ltd. */
 
 #include <linux/kfifo.h>
+#include <linux/vmalloc.h>
 #include <linux/rk-isp32-config.h>
 #include <media/v4l2-common.h>
 #include <media/v4l2-ioctl.h>

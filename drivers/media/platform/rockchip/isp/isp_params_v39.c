@@ -2,6 +2,7 @@
 /* Copyright (c) 2023 Rockchip Electronics Co., Ltd. */
 
 #include <media/v4l2-common.h>
+#include <linux/vmalloc.h>
 #include <media/v4l2-ioctl.h>
 #include <media/videobuf2-core.h>
 #include <media/videobuf2-vmalloc.h>	/* for ISP params */

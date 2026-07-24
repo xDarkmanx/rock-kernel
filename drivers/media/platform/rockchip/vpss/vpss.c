@@ -86,7 +86,7 @@ static int rkvpss_sd_get_fmt(struct v4l2_subdev *sd,
 	if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {
 		if (!sd_state)
 			return -EINVAL;
-		mf = v4l2_subdev_get_try_format(sd, sd_state, fmt->pad);
+		mf = v4l2_subdev_state_get_format(sd_state, fmt->pad);
 	}
 
 	*mf = sdev->in_fmt;
@@ -126,7 +126,7 @@ static int rkvpss_sd_set_fmt(struct v4l2_subdev *sd,
 	if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {
 		if (!sd_state)
 			return -EINVAL;
-		mf = v4l2_subdev_get_try_format(sd, sd_state, fmt->pad);
+		mf = v4l2_subdev_state_get_format(sd_state, fmt->pad);
 	}
 
 	if (fmt->pad == RKVPSS_PAD_SINK) {

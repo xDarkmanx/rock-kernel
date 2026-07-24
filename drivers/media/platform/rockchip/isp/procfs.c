@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Copyright (c) Rockchip Electronics Co., Ltd. */
 #include <linux/clk.h>
+#include <linux/vmalloc.h>
 #include <linux/proc_fs.h>
 #include <linux/sem.h>
 #include <linux/seq_file.h>
