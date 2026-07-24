@@ -2,3 +2,7 @@
 obj-y += rga/
 obj-y += rkisp1/
 obj-y += rkvdec/
+obj-y += cif/
+obj-y += isp/
+obj-y += ispp/
+obj-y += vpss/
