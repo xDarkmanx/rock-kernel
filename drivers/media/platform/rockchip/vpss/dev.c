@@ -455,4 +455,4 @@ EXPORT_SYMBOL(rkvpss_plat_drv);
 MODULE_AUTHOR("Rockchip Camera/ISP team");
 MODULE_DESCRIPTION("Rockchip VPSS platform driver");
 MODULE_LICENSE("GPL");
-MODULE_IMPORT_NS(DMA_BUF);
+MODULE_IMPORT_NS("DMA_BUF");
