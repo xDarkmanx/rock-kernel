@@ -375,7 +375,7 @@ static int rkispp_hw_probe(struct platform_device *pdev)
 	hw_dev->clk_rate_tbl = match_data->clk_rate_tbl;
 	hw_dev->clk_rate_tbl_num = match_data->clk_rate_tbl_num;
 
-	hw_dev->reset = devm_reset_control_array_get(dev, false, false);
+	hw_dev->reset = devm_reset_control_array_get_exclusive(dev);
 	if (IS_ERR(hw_dev->reset)) {
 		dev_info(dev, "failed to get cru reset\n");
 		hw_dev->reset = NULL;

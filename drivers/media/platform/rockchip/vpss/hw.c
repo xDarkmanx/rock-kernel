@@ -881,7 +881,7 @@ static int rkvpss_hw_probe(struct platform_device *pdev)
 	}
 	hw_dev->clks_num = match_data->clks_num;
 
-	hw_dev->reset = devm_reset_control_array_get(dev, false, false);
+	hw_dev->reset = devm_reset_control_array_get_exclusive(dev);
 	if (IS_ERR(hw_dev->reset)) {
 		dev_info(dev, "failed to get cru reset\n");
 		hw_dev->reset = NULL;

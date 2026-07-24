@@ -2803,7 +2803,7 @@ int rkcif_plat_init(struct rkcif_device *cif_dev, struct device_node *node, int 
 	if (cif_dev->chip_id == CHIP_RV1106_CIF)
 		cif_dev->is_use_dummybuf = false;
 
-	strlcpy(cif_dev->media_dev.model, dev_name(dev),
+	strscpy(cif_dev->media_dev.model, dev_name(dev),
 		sizeof(cif_dev->media_dev.model));
 	cif_dev->csi_host_idx = of_alias_get_id(node, "rkcif_mipi_lvds");
 	if (cif_dev->csi_host_idx < 0 || cif_dev->csi_host_idx > 5)
@@ -2824,7 +2824,7 @@ int rkcif_plat_init(struct rkcif_device *cif_dev, struct device_node *node, int 
 	cif_dev->media_dev.dev = dev;
 	v4l2_dev = &cif_dev->v4l2_dev;
 	v4l2_dev->mdev = &cif_dev->media_dev;
-	strlcpy(v4l2_dev->name, dev_name(dev), sizeof(v4l2_dev->name));
+	strscpy(v4l2_dev->name, dev_name(dev), sizeof(v4l2_dev->name));
 
 	ret = v4l2_device_register(cif_dev->dev, &cif_dev->v4l2_dev);
 	if (ret < 0)
@@ -3040,7 +3040,7 @@ static void rkcif_plat_remove(struct platform_device *pdev)
 	rkcif_detach_hw(cif_dev);
 	rkcif_proc_cleanup(cif_dev);
 	sysfs_remove_group(&pdev->dev.kobj, &dev_attr_grp);
-	del_timer_sync(&cif_dev->reset_watchdog_timer.timer);
+	timer_delete_sync(&cif_dev->reset_watchdog_timer.timer);
 }
 
 static int __maybe_unused rkcif_sleep_suspend(struct device *dev)

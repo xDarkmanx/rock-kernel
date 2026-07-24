@@ -22,6 +22,16 @@
 #define v4l2_async_subdev v4l2_async_connection
 
 /*
+ * v4l2_async_notifier_clr_unready_dev() was a BSP debug helper to drop async
+ * subdevs stuck in the unready list; it has no mainline equivalent. Stub it to
+ * a no-op so the BSP clr_unready_dev debug module-params compile.
+ */
+static inline void
+v4l2_async_notifier_clr_unready_dev(struct v4l2_async_notifier *notifier)
+{
+}
+
+/*
  * v4l2_async_nf_parse_fwnode_endpoints() was removed in 6.10. Reimplement it
  * on top of the connection-based API so the BSP notifier setup stays verbatim.
  * The driver's parse callback must return 0 to accept an endpoint; non-zero is

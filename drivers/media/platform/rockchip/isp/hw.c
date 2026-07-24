@@ -1282,7 +1282,7 @@ static int rkisp_hw_probe(struct platform_device *pdev)
 	if (!ret && clk_rate)
 		hw_dev->is_assigned_clk = true;
 
-	hw_dev->reset = devm_reset_control_array_get(dev, false, false);
+	hw_dev->reset = devm_reset_control_array_get_exclusive(dev);
 	if (IS_ERR(hw_dev->reset)) {
 		dev_dbg(dev, "failed to get reset\n");
 		hw_dev->reset = NULL;
