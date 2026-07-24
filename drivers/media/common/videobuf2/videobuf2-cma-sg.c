@@ -696,4 +696,5 @@ const struct vb2_mem_ops vb2_cma_sg_memops = {
 EXPORT_SYMBOL_GPL(vb2_cma_sg_memops);
 
 MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("Rockchip videobuf2 CMA scatter-gather allocator");
 MODULE_IMPORT_NS("DMA_BUF");
