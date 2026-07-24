@@ -5567,8 +5567,7 @@ static int rkcif_create_dummy_buf(struct rkcif_stream *stream)
 				fie.pad = 0;
 				fie.which = V4L2_SUBDEV_FORMAT_ACTIVE;
 				ret = v4l2_subdev_call_state_active(tmp_dev->terminal_sensor.sd,
-						       pad, enum_frame_interval,
-						       NULL, &fie);
+						       pad, enum_frame_interval, &fie);
 				if (!ret) {
 					if (fie.code == MEDIA_BUS_FMT_RGB888_1X24 ||
 					    fie.code == MEDIA_BUS_FMT_BGR888_1X24 ||
@@ -9077,7 +9076,7 @@ static struct v4l2_rect *rkcif_lvds_sd_get_crop(struct rkcif_lvds_subdev *subdev
 						enum v4l2_subdev_format_whence which)
 {
 	if (which == V4L2_SUBDEV_FORMAT_TRY)
-		return v4l2_subdev_get_try_crop(&subdev->sd, sd_state, RKCIF_LVDS_PAD_SINK);
+		return v4l2_subdev_state_get_crop(sd_state, RKCIF_LVDS_PAD_SINK);
 	else
 		return &subdev->crop;
 }
@@ -9139,7 +9138,7 @@ static int rkcif_lvds_sd_get_selection(struct v4l2_subdev *sd,
 				subdev->crop = sel->r;
 			}
 		} else {
-			sel->r = *v4l2_subdev_get_try_crop(sd, sd_state, sel->pad);
+			sel->r = *v4l2_subdev_state_get_crop(sd_state, sel->pad);
 		}
 		break;
 
