@@ -6,6 +6,8 @@
  * board DTS to free the 0xfedc0000/0xfedc8000 register windows.
  */
 
+/ {
+
 	csi2_dcphy0: csi2-dcphy0 {
 		compatible = "rockchip,rk3588-csi2-dphy";
 		rockchip,hw = <&csi2_dphy0_hw>, <&csi2_dphy1_hw>;
@@ -629,4 +631,4 @@
 		rockchip,sys_grf = <&sys_grf>;
 		status = "okay";
 	};
-
+};
