@@ -12,6 +12,7 @@
 #include <dt-bindings/soc/rockchip,vop2.h>
 #include <dt-bindings/usb/pd.h>
 #include "rk3588s.dtsi"
+#include "rk3588s-camera.dtsi"
 
 / {
 	model = "Radxa CM5 IO";
@@ -957,4 +958,29 @@
 
 &rknpu {
 	status = "okay";
+};
+
+/*
+ * Camera pipeline (BSP CSI/ISP/ISPP). The BSP csi2_dphy0_hw/_1_hw occupy the
+ * same register windows (0xfedc0000 / 0xfedc8000) as the mainline Innosilicon
+ * csi_dphy0/_1, so keep the mainline PHY drivers off to avoid an ioremap clash.
+ */
+&csi_dphy0 {
+	status = "disabled";
+};
+
+&csi_dphy1 {
+	status = "disabled";
+};
+
+/*
+ * IOMMU device-link-resume quirk (same pattern as rknpu_mmu): the master
+ * driver powers the IP and enables the MMU itself via rockchip_iommu_enable().
+ */
+&rkcif_mmu {
+	rockchip,disable-device-link-resume;
+};
+
+&isp1_mmu {
+	rockchip,disable-device-link-resume;
 };
