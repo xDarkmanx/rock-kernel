@@ -336,9 +336,9 @@
 		compatible = "rockchip,rk3588-rkisp-unite";
 		reg = <0x0 0xfdcb0000 0x0 0x10000>,
 		      <0x0 0xfdcc0000 0x0 0x10000>;
-		interrupts = <GIC_SPI 135 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 135 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "isp_irq", "mi_irq", "mipi_irq";
 		clocks = <&cru ACLK_ISP0>, <&cru HCLK_ISP0>,
 			 <&cru CLK_ISP0_CORE>, <&cru CLK_ISP0_CORE_MARVIN>,
@@ -357,9 +357,9 @@
 	rkisp0: rkisp@fdcb0000 {
 		compatible = "rockchip,rk3588-rkisp";
 		reg = <0x0 0xfdcb0000 0x0 0x7f00>;
-		interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 134 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 134 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "isp_irq", "mi_irq", "mipi_irq";
 		clocks = <&cru ACLK_ISP0>, <&cru HCLK_ISP0>,
 			 <&cru CLK_ISP0_CORE>, <&cru CLK_ISP0_CORE_MARVIN>,
@@ -374,8 +374,8 @@
 	rkisp_unite_mmu: rkisp-unite-mmu@fdcb7f00 {
 		compatible = "rockchip,iommu-v2";
 		reg = <0x0 0xfdcb7f00 0x0 0x100>, <0x0 0xfdcc7f00 0x0 0x100>;
-		interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "isp0_mmu", "isp1_mmu";
 		clocks = <&cru ACLK_ISP0>, <&cru HCLK_ISP0>,
 			 <&cru ACLK_ISP1>, <&cru HCLK_ISP1>;
@@ -389,7 +389,7 @@
 	isp0_mmu: iommu@fdcb7f00 {
 		compatible = "rockchip,iommu-v2";
 		reg = <0x0 0xfdcb7f00 0x0 0x100>;
-		interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "isp0_mmu";
 		clocks = <&cru ACLK_ISP0>, <&cru HCLK_ISP0>;
 		clock-names = "aclk", "iface";
@@ -402,9 +402,9 @@
 	rkisp1: rkisp@fdcc0000 {
 		compatible = "rockchip,rk3588-rkisp";
 		reg = <0x0 0xfdcc0000 0x0 0x7f00>;
-		interrupts = <GIC_SPI 135 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 135 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "isp_irq", "mi_irq", "mipi_irq";
 		clocks = <&cru ACLK_ISP1>, <&cru HCLK_ISP1>,
 			 <&cru CLK_ISP1_CORE>, <&cru CLK_ISP1_CORE_MARVIN>,
@@ -419,7 +419,7 @@
 	isp1_mmu: iommu@fdcc7f00 {
 		compatible = "rockchip,iommu-v2";
 		reg = <0x0 0xfdcc7f00 0x0 0x100>;
-		interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "isp1_mmu";
 		clocks = <&cru ACLK_ISP1>, <&cru HCLK_ISP1>;
 		clock-names = "aclk", "iface";
@@ -432,7 +432,7 @@
 	rkispp0: rkispp@fdcd0000 {
 		compatible = "rockchip,rk3588-rkispp";
 		reg = <0x0 0xfdcd0000 0x0 0x0f00>;
-		interrupts = <GIC_SPI 139 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 139 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "fec_irq";
 		clocks = <&cru ACLK_FISHEYE0>, <&cru HCLK_FISHEYE0>,
 			 <&cru CLK_FISHEYE0_CORE>;
@@ -447,7 +447,7 @@
 	fec0_mmu: iommu@fdcd0f00 {
 		compatible = "rockchip,iommu-v2";
 		reg = <0x0 0xfdcd0f00 0x0 0x100>;
-		interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "fec0_mmu";
 		clocks = <&cru ACLK_FISHEYE0>, <&cru HCLK_FISHEYE0>, <&cru CLK_FISHEYE0_CORE>;
 		clock-names = "aclk", "iface", "pclk";
@@ -460,7 +460,7 @@
 	rkispp1: rkispp@fdcd8000 {
 		compatible = "rockchip,rk3588-rkispp";
 		reg = <0x0 0xfdcd8000 0x0 0x0f00>;
-		interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "fec_irq";
 		clocks = <&cru ACLK_FISHEYE1>, <&cru HCLK_FISHEYE1>,
 			 <&cru CLK_FISHEYE1_CORE>;
@@ -475,7 +475,7 @@
 	fec1_mmu: iommu@fdcd8f00 {
 		compatible = "rockchip,iommu-v2";
 		reg = <0x0 0xfdcd8f00 0x0 0x100>;
-		interrupts = <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "fec1_mmu";
 		clocks = <&cru ACLK_FISHEYE1>, <&cru HCLK_FISHEYE1>,  <&cru CLK_FISHEYE1_CORE>;
 		clock-names = "aclk", "iface", "pclk";
@@ -489,7 +489,7 @@
 		compatible = "rockchip,rk3588-cif";
 		reg = <0x0 0xfdce0000 0x0 0x800>;
 		reg-names = "cif_regs";
-		interrupts = <GIC_SPI 155 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 155 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "cif-intr";
 		clocks = <&cru ACLK_VICAP>, <&cru HCLK_VICAP>, <&cru DCLK_VICAP>,
 			 <&cru ICLK_CSIHOST0>, <&cru ICLK_CSIHOST1>;
@@ -514,7 +514,7 @@
 		compatible = "rockchip,iommu-v2";
 		reg = <0x0 0xfdce0800 0x0 0x100>,
 		      <0x0 0xfdce0900 0x0 0x100>;
-		interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "cif_mmu";
 		clocks = <&cru ACLK_VICAP>, <&cru HCLK_VICAP>;
 		clock-names = "aclk", "iface";
@@ -528,8 +528,8 @@
 		compatible = "rockchip,rk3588-mipi-csi2-hw";
 		reg = <0x0 0xfdd10000 0x0 0x10000>;
 		reg-names = "csihost_regs";
-		interrupts = <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "csi-intr1", "csi-intr2";
 		clocks = <&cru PCLK_CSI_HOST_0>;
 		clock-names = "pclk_csi2host";
@@ -542,8 +542,8 @@
 		compatible = "rockchip,rk3588-mipi-csi2-hw";
 		reg = <0x0 0xfdd20000 0x0 0x10000>;
 		reg-names = "csihost_regs";
-		interrupts = <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "csi-intr1", "csi-intr2";
 		clocks = <&cru PCLK_CSI_HOST_1>;
 		clock-names = "pclk_csi2host";
@@ -556,8 +556,8 @@
 		compatible = "rockchip,rk3588-mipi-csi2-hw";
 		reg = <0x0 0xfdd30000 0x0 0x10000>;
 		reg-names = "csihost_regs";
-		interrupts = <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "csi-intr1", "csi-intr2";
 		clocks = <&cru PCLK_CSI_HOST_2>;
 		clock-names = "pclk_csi2host";
@@ -570,8 +570,8 @@
 		compatible = "rockchip,rk3588-mipi-csi2-hw";
 		reg = <0x0 0xfdd40000 0x0 0x10000>;
 		reg-names = "csihost_regs";
-		interrupts = <GIC_SPI 149 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 150 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 149 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 150 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "csi-intr1", "csi-intr2";
 		clocks = <&cru PCLK_CSI_HOST_3>;
 		clock-names = "pclk_csi2host";
@@ -584,8 +584,8 @@
 		compatible = "rockchip,rk3588-mipi-csi2-hw";
 		reg = <0x0 0xfdd50000 0x0 0x10000>;
 		reg-names = "csihost_regs";
-		interrupts = <GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 152 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 152 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "csi-intr1", "csi-intr2";
 		clocks = <&cru PCLK_CSI_HOST_4>;
 		clock-names = "pclk_csi2host";
@@ -598,8 +598,8 @@
 		compatible = "rockchip,rk3588-mipi-csi2-hw";
 		reg = <0x0 0xfdd60000 0x0 0x10000>;
 		reg-names = "csihost_regs";
-		interrupts = <GIC_SPI 153 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 154 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 153 IRQ_TYPE_LEVEL_HIGH 0>,
+			     <GIC_SPI 154 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "csi-intr1", "csi-intr2";
 		clocks = <&cru PCLK_CSI_HOST_5>;
 		clock-names = "pclk_csi2host";
