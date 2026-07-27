@@ -1144,14 +1144,12 @@ static int rockchip_csi2_dphy_get_inno_phy_hw(struct csi2_dphy *dphy)
 			dev_err(dphy->dev,
 				"failed to get dphy%d hw from node\n",
 				dphy->phy_index);
-			return -ENODEV;
+			return -EPROBE_DEFER;
 		}
 		dphy_hw = platform_get_drvdata(plat_dev);
 		if (!dphy_hw) {
-			dev_err(dphy->dev,
-				"failed attach dphy%d hw\n",
-				dphy->phy_index);
-			return -EINVAL;
+			/* hw device exists but its driver hasn't bound yet */
+			return -EPROBE_DEFER;
 		}
 		dphy->dphy_hw_group[i] = dphy_hw;
 	}
