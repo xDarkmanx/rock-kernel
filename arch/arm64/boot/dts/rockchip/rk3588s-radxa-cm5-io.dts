@@ -986,48 +986,17 @@
 };
 
 /*
- * Raspberry Pi Camera V2 (Sony IMX219) on CSI0 - mipi2 path.
- * Ported from the radxa-cm5-io-rpi-camera-v2 overlay, adapted for the
- * mainline imx219 driver (which requires VANA/VDIG supplies the BSP node
- * omitted). Pipeline: IMX219 -> csi2_dphy0(port0) -> mipi2_csi2 ->
- * rkcif_mipi_lvds2 -> sditf -> rkisp1_vir0.
+ * Raspberry Pi Camera V1.3 (OmniVision OV5647) on CSI0 - mipi2 path.
+ * The mainline ov5647 driver toggles PWDN via pwdn-gpios to wake the sensor.
+ * Pipeline: OV5647 -> csi2_dphy0(port0) -> mipi2_csi2 -> rkcif_mipi_lvds2 ->
+ * sditf -> rkisp1_vir0.
  */
 / {
-	camera_pwdn_gpio: camera-pwdn-gpio {
-		compatible = "regulator-fixed";
-		regulator-name = "camera_pwdn_gpio";
-		regulator-always-on;
-		regulator-boot-on;
-		enable-active-high;
-		gpio = <&gpio1 RK_PB2 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&cam_pwdn_gpio>;
-	};
-
 	clk_cam_24m: external-camera-clock-24m {
 		compatible = "fixed-clock";
 		clock-frequency = <24000000>;
 		clock-output-names = "clk_cam_24m";
 		#clock-cells = <0>;
-	};
-
-	/* mainline imx219 driver requires VANA(2.8V)+VDIG(1.8V) bulk supplies */
-	imx219_vana: imx219-vana {
-		compatible = "regulator-fixed";
-		regulator-name = "imx219_vana";
-		regulator-min-microvolt = <2800000>;
-		regulator-max-microvolt = <2800000>;
-		regulator-always-on;
-		regulator-boot-on;
-	};
-
-	imx219_vdig: imx219-vdig {
-		compatible = "regulator-fixed";
-		regulator-name = "imx219_vdig";
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <1800000>;
-		regulator-always-on;
-		regulator-boot-on;
 	};
 };
 
@@ -1045,24 +1014,23 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 
-	camera_imx219: camera-imx219@10 {
-		compatible = "sony,imx219";
-		reg = <0x10>;
+	camera_ov5647: camera-ov5647@36 {
+		compatible = "ovti,ov5647";
+		reg = <0x36>;
 		clocks = <&clk_cam_24m>;
-		clock-names = "xvclk";
-		VANA-supply = <&imx219_vana>;
-		VDIG-supply = <&imx219_vdig>;
+		pwdn-gpios = <&gpio1 RK_PB2 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&cam_pwdn_gpio>;
 		rockchip,camera-module-index = <1>;
 		rockchip,camera-module-facing = "back";
-		rockchip,camera-module-name = "rpi-camera-v2";
+		rockchip,camera-module-name = "rpi-camera-v1.3";
 		rockchip,camera-module-lens-name = "default";
 		status = "okay";
 
 		port {
-			imx219_out0: endpoint {
+			ov5647_out: endpoint {
 				remote-endpoint = <&mipidphy0_in_ucam1>;
 				data-lanes = <1 2>;
-				link-frequencies = /bits/ 64 <456000000>;
 			};
 		};
 	};
@@ -1085,7 +1053,7 @@
 			#size-cells = <0>;
 			mipidphy0_in_ucam1: endpoint@1 {
 				reg = <2>;
-				remote-endpoint = <&imx219_out0>;
+				remote-endpoint = <&ov5647_out>;
 				data-lanes = <1 2>;
 			};
 		};
