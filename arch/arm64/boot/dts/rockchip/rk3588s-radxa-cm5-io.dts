@@ -992,10 +992,10 @@
  * sditf -> rkisp1_vir0.
  */
 / {
-	clk_cam_24m: external-camera-clock-24m {
+	clk_cam_25m: external-camera-clock-25m {
 		compatible = "fixed-clock";
-		clock-frequency = <24000000>;
-		clock-output-names = "clk_cam_24m";
+		clock-frequency = <25000000>;
+		clock-output-names = "clk_cam_25m";
 		#clock-cells = <0>;
 	};
 };
@@ -1017,7 +1017,7 @@
 	camera_ov5647: camera-ov5647@36 {
 		compatible = "ovti,ov5647";
 		reg = <0x36>;
-		clocks = <&clk_cam_24m>;
+		clocks = <&clk_cam_25m>;
 		pwdn-gpios = <&gpio1 RK_PB2 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&cam_pwdn_gpio>;
