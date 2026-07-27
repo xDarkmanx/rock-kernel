@@ -1478,6 +1478,17 @@ static int __maybe_unused rk_iommu_suspend(struct device *dev)
 	if (iommu->domain == &rk_identity_domain)
 		return 0;
 
+	/*
+	 * With rockchip,disable-device-link-resume the master driver owns the
+	 * IOMMU power/clock and enables/disables the MMU explicitly via
+	 * rockchip_iommu_enable()/disable(). The framework must not touch MMU
+	 * registers here: at runtime-suspend the master may have already gated
+	 * the IP clock, so a register access would raise a synchronous external
+	 * abort.
+	 */
+	if (iommu->dlr_disable)
+		return 0;
+
 	rk_iommu_disable(iommu);
 
 	if (iommu->resets)
@@ -1492,6 +1503,10 @@ static int __maybe_unused rk_iommu_resume(struct device *dev)
 	int ret;
 
 	if (iommu->domain == &rk_identity_domain)
+		return 0;
+
+	/* See rk_iommu_suspend(): the master re-enables the MMU explicitly. */
+	if (iommu->dlr_disable)
 		return 0;
 
 	if (iommu->resets) {
