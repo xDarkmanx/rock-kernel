@@ -958,18 +958,8 @@ static int rockchip_csi2_dphy_fwnode_parse(struct csi2_dphy *dphy)
 			continue;
 		}
 
-		/* check sensor register state on i2c/spi bus for gki*/
-		if (!IS_ENABLED(CONFIG_NO_GKI)) {
-			remote_dev = bus_find_device_by_fwnode(&i2c_bus_type, remote_ep);
-			if (!remote_dev || !remote_dev->driver) {
-				remote_dev = bus_find_device_by_fwnode(&spi_bus_type, remote_ep);
-				if (!remote_dev || !remote_dev->driver) {
-					fwnode_handle_put(remote_ep);
-					continue;
-				}
-			}
-		}
-
+		/* skip the GKI driver-bound check: on mainline the sensor driver
+		 * may load after the dphy; v4l2-async handles the matching. */
 		fwnode_handle_put(remote_ep);
 
 		s_asd = v4l2_async_nf_add_fwnode_remote(&dphy->notifier, ep,
@@ -1218,6 +1208,21 @@ static int rockchip_csi2_dphy_probe(struct platform_device *pdev)
 	ret = rockchip_csi2dphy_media_init(csi2dphy);
 	if (ret < 0)
 		goto detach_hw;
+
+	/* Register the notifier (find sensors) and register ourselves as a
+	 * subdev so mipi-csi2 / rkcif can find us via v4l2-async. */
+	ret = v4l2_async_nf_register(&csi2dphy->notifier);
+	if (ret) {
+		dev_err(dev, "failed to register notifier: %d\n", ret);
+		goto detach_hw;
+	}
+
+	ret = v4l2_async_register_subdev(sd);
+	if (ret) {
+		dev_err(dev, "failed to register subdev: %d\n", ret);
+		v4l2_async_nf_unregister(&csi2dphy->notifier);
+		goto detach_hw;
+	}
 
 	pm_runtime_enable(&pdev->dev);
 
