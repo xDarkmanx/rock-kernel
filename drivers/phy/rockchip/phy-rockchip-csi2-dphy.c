@@ -1100,21 +1100,25 @@ static int rockchip_csi2_dphy_get_samsung_phy_hw(struct csi2_dphy *dphy)
 {
 	struct phy *dcphy;
 	struct device *dev = dphy->dev;
-	struct samsung_mipi_dcphy *dcphy_hw;
 	char phy_name[32];
 	int i = 0;
-	int ret = 0;
 
+	/*
+	 * The Samsung MIPI DCPHY is optional: on boards that route CSI2 via the
+	 * Innosilicon dphy (csi2_dphy*_hw), e.g. RPi cameras on mipi2, the
+	 * mipidcphy nodes may stay disabled in mainline (or be claimed by the
+	 * USB/DP combo). devm_phy_optional_get() returns -EPROBE_DEFER for a
+	 * disabled provider; treat absence as "no samsung phy" and continue so
+	 * the Innosilicon path still probes. Consumers NULL-check samsung_phy.
+	 */
 	for (i = 0; i < dphy->drv_data->num_samsung_phy; i++) {
 		sprintf(phy_name, "dcphy%d", i);
 		dcphy = devm_phy_optional_get(dev, phy_name);
-		if (IS_ERR(dcphy)) {
-			ret = PTR_ERR(dcphy);
-			dev_err(dphy->dev, "failed to get mipi dcphy: %d\n", ret);
-			return ret;
+		if (IS_ERR_OR_NULL(dcphy)) {
+			dphy->samsung_phy_group[i] = NULL;
+			continue;
 		}
-		dcphy_hw = phy_get_drvdata(dcphy);
-		dphy->samsung_phy_group[i] = dcphy_hw;
+		dphy->samsung_phy_group[i] = phy_get_drvdata(dcphy);
 	}
 	return 0;
 }
