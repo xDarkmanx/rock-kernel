@@ -883,25 +883,18 @@ static const struct isp_match_data rk3588_isp_unite_match_data = {
 };
 
 static const struct of_device_id rkisp_hw_of_match[] = {
-#ifdef CONFIG_CPU_RK3562
 	{
 		.compatible = "rockchip,rk3562-rkisp",
 		.data = &rk3562_isp_match_data,
 	},
-#endif
-#ifdef CONFIG_CPU_RK3568
 	{
 		.compatible = "rockchip,rk3568-rkisp",
 		.data = &rk3568_isp_match_data,
 	},
-#endif
-#ifdef CONFIG_CPU_RK3576
 	{
 		.compatible = "rockchip,rk3576-rkisp",
 		.data = &rk3576_isp_match_data,
 	},
-#endif
-#ifdef CONFIG_CPU_RK3588
 	{
 		.compatible = "rockchip,rk3588-rkisp",
 		.data = &rk3588_isp_match_data,
@@ -909,19 +902,14 @@ static const struct of_device_id rkisp_hw_of_match[] = {
 		.compatible = "rockchip,rk3588-rkisp-unite",
 		.data = &rk3588_isp_unite_match_data,
 	},
-#endif
-#ifdef CONFIG_CPU_RV1106
 	{
 		.compatible = "rockchip,rv1106-rkisp",
 		.data = &rv1106_isp_match_data,
 	},
-#endif
-#ifdef CONFIG_CPU_RV1126
 	{
 		.compatible = "rockchip,rv1126-rkisp",
 		.data = &rv1126_isp_match_data,
 	},
-#endif
 	{},
 };
 
