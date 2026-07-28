@@ -983,18 +983,27 @@ static int csi2_notifier(struct csi2_dev *csi2)
 
 	csi2->sd.subdev_notifier = &csi2->notifier;
 	csi2->notifier.ops = &csi2_async_ops;
+
+	/* In 6.18 the subdev must be registered before the subdev notifier,
+	 * otherwise v4l2_async_nf_register dereferences sd->v4l2_dev == NULL. */
+	ret = v4l2_async_register_subdev(&csi2->sd);
+	if (ret) {
+		v4l2_err(&csi2->sd, "failed to register subdev: %d\n", ret);
+		v4l2_async_nf_cleanup(&csi2->notifier);
+		return ret;
+	}
+
 	ret = v4l2_async_nf_register(&csi2->notifier);
 	if (ret) {
 		v4l2_err(&csi2->sd,
 			 "failed to register async notifier : %d\n",
 			 ret);
+		v4l2_async_unregister_subdev(&csi2->sd);
 		v4l2_async_nf_cleanup(&csi2->notifier);
 		return ret;
 	}
 
-	ret = v4l2_async_register_subdev(&csi2->sd);
-
-	return ret;
+	return 0;
 }
 
 static const struct csi2_match_data rk1808_csi2_match_data = {
