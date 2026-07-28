@@ -1059,7 +1059,7 @@
 			reg = <0>;
 			#address-cells = <1>;
 			#size-cells = <0>;
-			mipidphy0_in_ucam1: endpoint@1 {
+			mipidphy0_in_ucam1: endpoint@2 {
 				reg = <2>;
 				remote-endpoint = <&ov5647_out>;
 				data-lanes = <1 2>;
