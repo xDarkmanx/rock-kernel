@@ -984,8 +984,9 @@ static int csi2_notifier(struct csi2_dev *csi2)
 	csi2->sd.subdev_notifier = &csi2->notifier;
 	csi2->notifier.ops = &csi2_async_ops;
 
-	/* In 6.18 the subdev must be registered before the subdev notifier,
-	 * otherwise v4l2_async_nf_register dereferences sd->v4l2_dev == NULL. */
+	/* In 6.18 v4l2_async_register_subdev() checks sd->asd; ensure it's
+	 * NULL so the framework allocates a fresh async connection. */
+	csi2->sd.asd = NULL;
 	ret = v4l2_async_register_subdev(&csi2->sd);
 	if (ret) {
 		v4l2_err(&csi2->sd, "failed to register subdev: %d\n", ret);
