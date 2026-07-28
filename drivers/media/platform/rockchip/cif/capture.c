@@ -6531,6 +6531,7 @@ int rkcif_update_sensor_info(struct rkcif_stream *stream)
 			/* Non-fatal: use default frame interval */
 			terminal_sensor->fi.interval.numerator = 1;
 			terminal_sensor->fi.interval.denominator = 30;
+			ret = 0;
 		}
 		if (v4l2_subdev_call(terminal_sensor->sd, core, ioctl, RKMODULE_GET_CSI_DSI_INFO,
 					&terminal_sensor->dsi_input_en)) {
