@@ -938,7 +938,6 @@ static int rockchip_csi2_dphy_fwnode_parse(struct csi2_dphy *dphy)
 	struct v4l2_fwnode_endpoint vep = {
 		.bus_type = V4L2_MBUS_CSI2_DPHY
 	};
-	struct device *remote_dev = NULL;
 	int ret;
 
 	fwnode_graph_for_each_endpoint(dev_fwnode(dev), ep) {
