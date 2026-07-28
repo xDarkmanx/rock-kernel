@@ -1208,20 +1208,9 @@ static int rockchip_csi2_dphy_probe(struct platform_device *pdev)
 	if (ret < 0)
 		goto detach_hw;
 
-	/* Register the notifier (find sensors) and register ourselves as a
-	 * subdev so mipi-csi2 / rkcif can find us via v4l2-async. */
-	ret = v4l2_async_nf_register(&csi2dphy->notifier);
-	if (ret) {
-		dev_err(dev, "failed to register notifier: %d\n", ret);
-		goto detach_hw;
-	}
-
-	ret = v4l2_async_register_subdev(sd);
-	if (ret) {
-		dev_err(dev, "failed to register subdev: %d\n", ret);
-		v4l2_async_nf_unregister(&csi2dphy->notifier);
-		goto detach_hw;
-	}
+	/* rockchip_csi2dphy_media_init() already registers the notifier
+	 * AND the subdev (v4l2_async_nf_register + v4l2_async_register_subdev).
+	 * No additional registration needed here. */
 
 	pm_runtime_enable(&pdev->dev);
 
