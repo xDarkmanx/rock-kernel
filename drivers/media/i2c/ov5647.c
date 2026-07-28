@@ -1073,12 +1073,59 @@ static int ov5647_get_selection(struct v4l2_subdev *sd,
 	return -EINVAL;
 }
 
+/* BSP bridge: get_mbus_config — returns CSI-2 D-PHY 2-lane config.
+ * The BSP rkcif/dphy drivers call this to learn the sensor's MIPI bus
+ * topology. On a fixed CSI connector the config is static. */
+static int ov5647_get_mbus_config(struct v4l2_subdev *sd, unsigned int pad,
+				 struct v4l2_mbus_config *config)
+{
+	if (pad)
+		return -EINVAL;
+
+	config->type = V4L2_MBUS_CSI2_DPHY;
+	config->bus.mipi_csi2.num_data_lanes = 2;
+	config->bus.mipi_csi2.clock_mode = V4L2_MBUS_CSI2_CONTINUOUS_CLOCK;
+
+	return 0;
+}
+
+/* BSP bridge: get_frame_interval — returns the sensor's output frame rate,
+ * computed from the current mode's pixel_rate, hts, vts. */
+static int ov5647_get_frame_interval(struct v4l2_subdev *sd,
+				    struct v4l2_subdev_state *state,
+				    struct v4l2_subdev_frame_interval *fi)
+{
+	struct ov5647 *sensor = to_sensor(sd);
+	const struct ov5647_mode *mode = sensor->mode;
+	u64 pixel_rate;
+	u32 hts, vts;
+
+	if (!mode)
+		return -EINVAL;
+
+	pixel_rate = mode->pixel_rate;
+	hts = mode->hts;
+	vts = mode->vts;
+
+	if (hts && vts && pixel_rate) {
+		fi->interval.numerator = hts * vts;
+		fi->interval.denominator = pixel_rate;
+	} else {
+		fi->interval.numerator = 1;
+		fi->interval.denominator = 60;
+	}
+
+	return 0;
+}
+
 static const struct v4l2_subdev_pad_ops ov5647_subdev_pad_ops = {
 	.enum_mbus_code		= ov5647_enum_mbus_code,
 	.enum_frame_size	= ov5647_enum_frame_size,
 	.set_fmt		= ov5647_set_pad_fmt,
 	.get_fmt		= ov5647_get_pad_fmt,
 	.get_selection		= ov5647_get_selection,
+	.get_mbus_config	= ov5647_get_mbus_config,
+	.get_frame_interval	= ov5647_get_frame_interval,
 };
 
 static const struct v4l2_subdev_ops ov5647_subdev_ops = {
