@@ -6523,12 +6523,14 @@ int rkcif_update_sensor_info(struct rkcif_stream *stream)
 			return ret;
 		}
 		ret = v4l2_subdev_call_state_active(terminal_sensor->sd, pad,
-				       get_frame_interval, &terminal_sensor->fi);
+			       get_frame_interval, &terminal_sensor->fi);
 		if (ret) {
-			v4l2_err(&stream->cifdev->v4l2_dev,
+			v4l2_warn(&stream->cifdev->v4l2_dev,
 				 "%s: get terminal %s g_frame_interval failed!\n",
 				 __func__, terminal_sensor->sd->name);
-			return ret;
+			/* Non-fatal: use default frame interval */
+			terminal_sensor->fi.interval.numerator = 1;
+			terminal_sensor->fi.interval.denominator = 30;
 		}
 		if (v4l2_subdev_call(terminal_sensor->sd, core, ioctl, RKMODULE_GET_CSI_DSI_INFO,
 					&terminal_sensor->dsi_input_en)) {
