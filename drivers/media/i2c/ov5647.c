@@ -1084,7 +1084,6 @@ static int ov5647_get_mbus_config(struct v4l2_subdev *sd, unsigned int pad,
 
 	config->type = V4L2_MBUS_CSI2_DPHY;
 	config->bus.mipi_csi2.num_data_lanes = 2;
-	config->flags = 0; /* continuous clock */
 
 	return 0;
 }
